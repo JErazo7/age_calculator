@@ -1,5 +1,7 @@
 library age_calculator;
 
+import 'dart:math';
+
 class DateDuration {
   int days;
   int months;
@@ -95,13 +97,19 @@ class AgeCalculator {
   /// add method
   static DateTime add(
       {required DateTime date, required DateDuration duration}) {
-    int years = date.year + duration.years;
-    years += ((date.month + duration.months) ~/ DateTime.monthsPerYear);
-    int months = ((date.month + duration.months) % DateTime.monthsPerYear);
+    var newDateTime = date.add(Duration(days: duration.days));
+    newDateTime = _addMonths(newDateTime, duration.months);
+    newDateTime = _addMonths(newDateTime, duration.years * 12);
+    return newDateTime;
+  }
 
-    int days = date.day + duration.days - 1;
-
-    return DateTime(years, months, 1).add(Duration(days: days));
+  /// subtract methods
+  static DateTime subtract(
+      {required DateTime date, required DateDuration duration}) {
+    var newDateTime = date.subtract(Duration(days: duration.days));
+    newDateTime = _addMonths(newDateTime, -duration.months);
+    newDateTime = _addMonths(newDateTime, -duration.years * 12);
+    return newDateTime;
   }
 
   static DateDuration age(DateTime birthdate, {DateTime? today}) {
@@ -116,5 +124,17 @@ class AgeCalculator {
         ? AgeCalculator.add(date: tempDate, duration: DateDuration(years: 1))
         : tempDate;
     return dateDifference(fromDate: endDate, toDate: nextBirthdayDate);
+  }
+
+  static DateTime _addMonths(DateTime dateTime, int months) {
+    final modMonths = months % 12;
+    var newYear = dateTime.year + ((months - modMonths) ~/ 12);
+    var newMonth = dateTime.month + modMonths;
+    if (newMonth > 12) {
+      newYear++;
+      newMonth -= 12;
+    }
+    final newDay = min(dateTime.day, daysInMonth(newYear, newMonth));
+    return DateTime(newYear, newMonth, newDay);
   }
 }
